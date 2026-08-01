@@ -1,8 +1,8 @@
 // Loaded AFTER the Supabase CDN script in every HTML page.
 // Replace these two values with your real Supabase project values
 // (Project Settings -> API in your Supabase dashboard).
-const SUPABASE_URL = "https://YOUR-PROJECT-ID.supabase.co";
-const SUPABASE_ANON_KEY = "your-anon-public-key-here";
+const SUPABASE_URL = "https://tseenfhjgomvliuvtubx.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRzZWVuZmhqZ29tdmxpdXZ0dWJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2MDk0NDcsImV4cCI6MjEwMTE4NTQ0N30.w-qqE8IhtoTLZdLv5_xw6yiUL8GXgKF6R9yNnycDVE8";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
