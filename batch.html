@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Batch</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+  <a href="batches.html">&larr; Batches</a>
+  <button class="secondary" style="width:auto;" onclick="logout()">Log out</button>
+</nav>
+<h1 id="batch-name">Loading...</h1>
+
+<div class="tabs">
+  <a href="#" id="tab-notices" onclick="showTab('notices')">Notices</a>
+  <a href="#" id="tab-words" onclick="showTab('words')">Words Vault</a>
+  <a href="#" id="tab-chat" onclick="showTab('chat')">Chat</a>
+</div>
+
+<!-- ================= NOTICES ================= -->
+<div id="panel-notices">
+  <div class="card" id="teacher-notice-form" style="display:none;">
+    <h2>New Notice</h2>
+    <select id="notice-type">
+      <option value="class">Class Notice</option>
+      <option value="test">Test Notice</option>
+    </select>
+    <input id="notice-title" placeholder="Title">
+    <textarea id="notice-desc" placeholder="Description"></textarea>
+    <input id="notice-date" type="date">
+    <input id="notice-time" type="time">
+    <input id="notice-syllabus" placeholder="Syllabus (test notices only)">
+    <button onclick="createNotice()">Post Notice</button>
+  </div>
+
+  <div class="tabs">
+    <a href="#" onclick="loadNotices(null)">All</a>
+    <a href="#" onclick="loadNotices('class')">Class</a>
+    <a href="#" onclick="loadNotices('test')">Test</a>
+  </div>
+  <div id="notice-list">Loading...</div>
+</div>
+
+<!-- ================= WORDS VAULT ================= -->
+<div id="panel-words" style="display:none;">
+  <div class="card">
+    <h2>Add a Word</h2>
+    <input id="word-input" placeholder="Word">
+    <input id="meaning-input" placeholder="Meaning">
+    <input id="example-input" placeholder="Example sentence (optional)">
+    <button onclick="addWord()">Add Word</button>
+  </div>
+  <div id="word-list">Loading...</div>
+</div>
+
+<!-- ================= CHAT ================= -->
+<div id="panel-chat" style="display:none;">
+  <div id="chat-list" style="max-height:60vh; overflow-y:auto;">Loading...</div>
+  <div class="card">
+    <textarea id="chat-input" placeholder="Type a message..." rows="2"></textarea>
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+<script src="js/notices.js"></script>
+<script src="js/words.js"></script>
+<script src="js/chat.js"></script>
+<script>
+let currentUser = null;
+let batchId = null;
+let myRole = null;
+
+async function init() {
+  currentUser = await requireLogin();
+  if (!currentUser) return;
+
+  batchId = getBatchIdFromUrl();
+  if (!batchId) { alert("No batch selected"); location.href = "batches.html"; return; }
+
+  myRole = await getMyRole(batchId, currentUser.id);
+  if (!myRole) { alert("You are not a member of this batch"); location.href = "batches.html"; return; }
+
+  const { data: batch } = await supabase.from("batches").select("name").eq("id", batchId).single();
+  document.getElementById("batch-name").textContent = batch ? batch.name : "Batch";
+
+  if (myRole === "teacher") {
+    document.getElementById("teacher-notice-form").style.display = "block";
+  }
+
+  showTab("notices");
+}
+
+function showTab(tab) {
+  ["notices", "words", "chat"].forEach(t => {
+    document.getElementById("panel-" + t).style.display = (t === tab) ? "block" : "none";
+    document.getElementById("tab-" + t).classList.toggle("active", t === tab);
+  });
+  if (tab === "notices") loadNotices(null);
+  if (tab === "words") loadWords();
+  if (tab === "chat") loadMessages();
+}
+
+init();
+</script>
+</body>
+</html>

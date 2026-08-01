@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Batches</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<nav>
+  <h1>My Batches</h1>
+  <button class="secondary" style="width:auto;" onclick="logout()">Log out</button>
+</nav>
+
+<div class="card">
+  <h2>Create a Batch</h2>
+  <input id="new-batch-name" placeholder="Batch name (e.g. Batch 2026-A)">
+  <textarea id="new-batch-desc" placeholder="Description (optional)"></textarea>
+  <button onclick="createBatch()">Create</button>
+</div>
+
+<h2>Your Batches</h2>
+<div id="batch-list">Loading...</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+<script>
+let currentUser = null;
+
+async function init() {
+  currentUser = await requireLogin();
+  if (!currentUser) return;
+  loadBatches();
+}
+
+async function loadBatches() {
+  // Get batch_ids the user is a member of, then the batch details
+  const { data: memberships, error: mErr } = await supabase
+    .from("batch_memberships")
+    .select("batch_id, role, batches(id, name, description)")
+    .eq("user_id", currentUser.id);
+
+  const list = document.getElementById("batch-list");
+  if (mErr) { list.textContent = mErr.message; return; }
+  if (!memberships.length) { list.textContent = "You're not in any batch yet."; return; }
+
+  list.innerHTML = memberships.map(m => `
+    <div class="card">
+      <span class="tag">${m.role}</span>
+      <h3>${m.batches.name}</h3>
+      <p>${m.batches.description || ""}</p>
+      <button onclick="location.href='batch.html?batch=${m.batches.id}'">Open</button>
+    </div>
+  `).join("");
+}
+
+async function createBatch() {
+  const name = document.getElementById("new-batch-name").value.trim();
+  const description = document.getElementById("new-batch-desc").value.trim();
+  if (!name) return alert("Enter a batch name");
+
+  const { data: batch, error } = await supabase
+    .from("batches")
+    .insert({ name, description, created_by: currentUser.id })
+    .select()
+    .single();
+  if (error) return alert(error.message);
+
+  // Creator automatically becomes teacher of their own batch
+  const { error: memErr } = await supabase
+    .from("batch_memberships")
+    .insert({ batch_id: batch.id, user_id: currentUser.id, role: "teacher" });
+  if (memErr) return alert(memErr.message);
+
+  document.getElementById("new-batch-name").value = "";
+  document.getElementById("new-batch-desc").value = "";
+  loadBatches();
+}
+
+init();
+</script>
+</body>
+</html>

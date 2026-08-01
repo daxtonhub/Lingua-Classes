@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login | Batch Learning Platform</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<h1>Batch Learning Platform</h1>
+
+<div class="card">
+  <h2>Log In</h2>
+  <input id="login-email" type="email" placeholder="Email">
+  <input id="login-password" type="password" placeholder="Password">
+  <button onclick="handleLogin()">Log In</button>
+  <p id="login-error" style="color:red"></p>
+</div>
+
+<div class="card">
+  <h2>Sign Up</h2>
+  <input id="signup-name" type="text" placeholder="Full name">
+  <input id="signup-email" type="email" placeholder="Email">
+  <input id="signup-password" type="password" placeholder="Password">
+  <button class="secondary" onclick="handleSignup()">Create Account</button>
+  <p id="signup-error" style="color:red"></p>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabaseClient.js"></script>
+<script>
+  // If already logged in, skip straight to batch list
+  supabase.auth.getUser().then(({ data }) => {
+    if (data.user) window.location.href = "batches.html";
+  });
+
+  async function handleLogin() {
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      document.getElementById("login-error").textContent = error.message;
+      return;
+    }
+    window.location.href = "batches.html";
+  }
+
+  async function handleSignup() {
+    const full_name = document.getElementById("signup-name").value;
+    const email = document.getElementById("signup-email").value;
+    const password = document.getElementById("signup-password").value;
+    const { error } = await supabase.auth.signUp({
+      email, password,
+      options: { data: { full_name } }
+    });
+    if (error) {
+      document.getElementById("signup-error").textContent = error.message;
+      return;
+    }
+    alert("Account created! Check your email if confirmation is required, then log in.");
+  }
+</script>
+</body>
+</html>
